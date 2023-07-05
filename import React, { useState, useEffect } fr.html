@@ -1,0 +1,84 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+function App() {
+  const [emailAddress, setEmailAddress] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [intervalId, setIntervalId] = useState(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+  useEffect(() => {
+    const storedEmailAddress = localStorage.getItem('emailAddress');
+    if (storedEmailAddress) {
+      setEmailAddress(storedEmailAddress);
+    }
+  }, []);
+
+  const generateEmailAddress = async () => {
+    try {
+      const response = await axios.get('https://api.dropmail.me/random');
+      const { email } = response.data;
+      setEmailAddress(email);
+      localStorage.setItem('emailAddress', email);
+    } catch (error) {
+      console.error('Erro ao gerar o endereço de email:', error);
+    }
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(emailAddress);
+    } catch (error) {
+      console.error('Erro ao copiar o endereço de email:', error);
+    }
+  };
+
+  const checkMessages = async () => {
+    try {
+      const response = await axios.get(`https://api.dropmail.me/${emailAddress}/messages`);
+      setMessages(response.data.messages);
+    } catch (error) {
+      console.error('Erro ao obter as mensagens:', error);
+    }
+  };
+
+  const startCheckingMessages = () => {
+    const id = setInterval(checkMessages, 15000);
+    setIntervalId(id);
+  };
+
+  const stopCheckingMessages = () => {
+    clearInterval(intervalId);
+    setIntervalId(null);
+  };
+
+  useEffect(() => {
+    if (notificationsEnabled) {
+      startCheckingMessages();
+    } else {
+      stopCheckingMessages();
+    }
+  }, [notificationsEnabled]);
+
+  return (
+    <div className="App">
+      <h1>Email Temporário</h1>
+      <p>Endereço de email temporário: {emailAddress}</p>
+      <button onClick={generateEmailAddress}>Gerar</button>
+      <button onClick={copyToClipboard}>Copiar</button>
+
+      <h2>Mensagens</h2>
+      <ul>
+        {messages.map((message) => (
+          <li key={message.id}>{message.subject}</li>
+        ))}
+      </ul>
+
+      <button onClick={() => setNotificationsEnabled(!notificationsEnabled)}>
+        {notificationsEnabled ? 'Desativar Notificações' : 'Ativar Notificações'}
+      </button>
+    </div>
+  );
+}
+
+export default App;
