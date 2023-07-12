@@ -3,8 +3,19 @@ import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-email-temporario',
-  templateUrl: './email-temporario.component.html',
-  styleUrls: ['./email-temporario.component.css']
+  template: `
+    <div>
+      <h2>Email Temporário</h2>
+
+      <div *ngIf="temporaryEmail">
+        <p>Email temporário gerado:</p>
+        <p>{{ temporaryEmail }}</p>
+      </div>
+
+      <button (click)="gerarEmailTemporario()">Gerar Email Temporário</button>
+    </div>
+  `,
+  styles: []
 })
 export class EmailTemporarioComponent {
   temporaryEmail: string;
